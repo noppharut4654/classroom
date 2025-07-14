@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>คำถามและการตอบกลับ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #18181B;
+            color: #fff;
+            font-family: 'Google Sans', Arial, sans-serif;
+            min-height: 100vh;
+        }
+        .discussion-card {
+            background-color: #27272A;
+            border: 1px solid #3F3F46;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        .reply-card {
+            background-color: #3F3F46;
+            border: none;
+            border-radius: 8px;
+            margin: 0.5rem 0;
+            margin-left: 2rem;
+        }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .form-control {
+            background-color: #27272A;
+            border: 1px solid #3F3F46;
+            color: #fff;
+        }
+        .form-control:focus {
+            background-color: #27272A;
+            border-color: #4ADE80;
+            color: #fff;
+            box-shadow: 0 0 0 0.25rem rgba(74, 222, 128, 0.25);
+        }
+        .form-control::placeholder {
+            color: #71717A;
+        }
+        .no-replies {
+            padding: 2rem;
+            text-align: center;
+            color: #71717A;
+            background-color: #27272A;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+        .toast-container {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            z-index: 1050;
+        }
+    </style>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+    <div class="container py-4">
+        <!-- Question Card -->
+        <div id="questionCard"></div>
+
+        <!-- Replies Section -->
+        <div id="repliesSection" class="mt-4"></div>
+
+        <!-- Reply Form -->
+        <div class="card discussion-card mt-4">
+            <div class="card-body">
+                <h5 class="card-title mb-3">ตอบกลับ</h5>
+                <form id="replyForm" target="hidden-form-target" method="POST" action="https://script.google.com/macros/s/AKfycbwqMSPtREoUDM4Nn6hGy_AcmcoHy4dB4tjeX5Fj3VZ5buL2t_YWPuNAbu0nxyKDqqVI/exec">
+                    <input type="hidden" name="action" value="submitDiscussionReply">
+                    <input type="hidden" name="discussion_id" id="discussionId">
+                    <input type="hidden" name="user_id" id="userId">
+                    <input type="hidden" name="display_name" id="displayName">
+                    <div class="form-group">
+                        <textarea class="form-control mb-3" name="message" rows="3" placeholder="พิมพ์ข้อความตอบกลับ..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">ส่งข้อความ</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast สำหรับแจ้งเตือน -->
+    <div class="toast-container">
+        <div id="successToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    ส่งข้อความตอบกลับเรียบร้อย!
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
+    <iframe id="hidden-form-target" name="hidden-form-target" style="display:none;"></iframe>
+    <iframe id="load-data-frame" name="load-data-frame" style="display:none;"></iframe>
+
+    <script>
+        let currentDiscussionId = '';
+        
+        // เริ่มต้นเมื่อโหลดหน้า
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                await liff.init({ liffId: "2006490627-0zX7PemZ" });
+                if (liff.isLoggedIn()) {
+                    const params = new URLSearchParams(window.location.search);
+                    currentDiscussionId = params.get('discussion_id');
+                    
+                    const profile = await liff.getProfile();
+                    document.getElementById('discussionId').value = currentDiscussionId;
+                    document.getElementById('userId').value = profile.userId;
+                    document.getElementById('displayName').value = profile.displayName;
+                    
+                    loadDiscussion();
+                } else {
+                    await liff.login();
+                }
+            } catch (err) {
+                console.error('LIFF Initialization failed', err);
+                alert('เกิดข้อผิดพลาดในการเริ่มต้นระบบ');
+            }
+        });
+
+        // โหลดข้อมูลการสนทนา
+        function loadDiscussion() {
+            const loadForm = document.createElement('form');
+            loadForm.method = 'POST';
+            loadForm.target = 'load-data-frame';
+            loadForm.action = 'https://script.google.com/macros/s/AKfycbwqMSPtREoUDM4Nn6hGy_AcmcoHy4dB4tjeX5Fj3VZ5buL2t_YWPuNAbu0nxyKDqqVI/exec';
+
+            const inputs = {
+                action: 'getDiscussionDetail',
+                discussion_id: currentDiscussionId
+            };
+
+            Object.entries(inputs).forEach(([name, value]) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = name;
+                input.value = value;
+                loadForm.appendChild(input);
+            });
+
+            document.body.appendChild(loadForm);
+            loadForm.submit();
+            document.body.removeChild(loadForm);
+        }
+
+        // รับข้อมูลจาก iframe
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.status === 'success') {
+                if (event.data.action === 'getDiscussionDetail') {
+                    displayDiscussion(event.data.data);
+                } else if (event.data.action === 'submitDiscussionReply') {
+                    // แสดง Toast
+                    const successToast = document.getElementById('successToast');
+                    const toast = new bootstrap.Toast(successToast);
+                    toast.show();
+                    
+                    // รีเซ็ตฟอร์มและโหลดข้อมูลใหม่
+                    document.getElementById('replyForm').reset();
+                    loadDiscussion();
+                }
+            } else if (event.data.status === 'error') {
+                alert('เกิดข้อผิดพลาด: ' + event.data.message);
+            }
+        });
+
+        // แสดงข้อมูลการสนทนา
+        function displayDiscussion(discussion) {
+            // แสดงคำถาม
+            const questionCard = document.getElementById('questionCard');
+            questionCard.innerHTML = `
+                <div class="card discussion-card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <img src="${discussion.user_avatar || 'https://via.placeholder.com/40'}" 
+                                 class="user-avatar me-3" 
+                                 alt="${discussion.user_name}">
+                            <div>
+                                <h5 class="mb-0">${discussion.user_name}</h5>
+                                <small class="text-muted">${new Date(discussion.created_at).toLocaleString('th-TH')}</small>
+                            </div>
+                        </div>
+                        <h4 class="mb-3">${discussion.title || 'คำถามจากวิดีโอ'}</h4>
+                        <p class="card-text">${discussion.message}</p>
+                    </div>
+                </div>
+            `;
+
+            // แสดงการตอบกลับ
+            const repliesSection = document.getElementById('repliesSection');
+            if (discussion.replies && discussion.replies.length > 0) {
+                repliesSection.innerHTML = discussion.replies
+                    .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+                    .map(reply => `
+                        <div class="card reply-card">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    <img src="${reply.user_avatar || 'https://via.placeholder.com/40'}" 
+                                         class="user-avatar me-3" 
+                                         alt="${reply.user_name}">
+                                    <div>
+                                        <h6 class="mb-0">${reply.user_name}</h6>
+                                        <small class="text-muted">${new Date(reply.created_at).toLocaleString('th-TH')}</small>
+                                    </div>
+                                </div>
+                                <p class="card-text">${reply.message}</p>
+                            </div>
+                        </div>
+                    `).join('');
+            } else {
+                repliesSection.innerHTML = '<div class="no-replies">ยังไม่มีการตอบกลับ</div>';
+            }
+        }
+
+        // จัดการการส่งการตอบกลับ
+        document.getElementById('replyForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const message = this.querySelector('textarea[name="message"]').value.trim();
+            
+            if (!message) {
+                alert('กรุณากรอกข้อความ');
+                return;
+            }
+
+            const profile = await liff.getProfile();
+            document.getElementById('userId').value = profile.userId;
+            document.getElementById('displayName').value = profile.displayName;
+            this.submit();
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

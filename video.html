@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เรียนออนไลน์</title>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <!-- รวม Bootstrap CSS จาก CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- รวม Bootstrap Icons จาก CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- นำเข้า Google Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- ไฟล์ CSS ของคุณ -->    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            font-family: 'Google Sans', Arial, sans-serif;
+            color: #fff;
+        }
+        .video-title {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 10px 15px;
+            background-color: rgba(0, 0, 0, 0.8);
+            font-size: 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 1000;
+        }
+        .video-container {
+            position: absolute;
+            top: 50px;
+            bottom: 60px;
+            width: 100%;
+            background-color: #000;
+        }
+        .video-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 60px;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+        }
+        .footer button {
+            font-size: 14px;
+        }
+        .modal-content {
+            background-color: #27272A;
+            color: #fff;
+        }
+        .modal-header {
+            border-bottom: 1px solid #3F3F46;
+        }
+        .modal-footer {
+            border-top: 1px solid #3F3F46;
+        }
+        .form-control {
+            background-color: #18181B;
+            border: 1px solid #3F3F46;
+            color: #fff;
+        }
+        .form-control:focus {
+            background-color: #18181B;
+            border-color: #4ADE80;
+            color: #fff;
+            box-shadow: 0 0 0 0.25rem rgba(74, 222, 128, 0.25);
+        }
+        .btn-close {
+            filter: invert(1) grayscale(100%) brightness(200%);
+        }
+    </style>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+    <div class="video-title" id="videoTitle">Loading...</div>
+    <div class="video-container" id="videoContainer"></div>
+<iframe id="hidden-form-target" name="hidden-form-target" style="display:none;"></iframe>
+
+    <footer class="footer">
+        <button class="btn btn-secondary" onclick="handleBack()">Back</button>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#questionModal">Send Question</button>
+    </footer>
+
+<!-- Modal สำหรับพิมพ์คำถาม -->
+<div class="modal fade" id="questionModal" tabindex="-1" aria-labelledby="questionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="questionModalLabel">พิมพ์คำถามของคุณ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="questionForm" target="hidden-form-target" method="POST" action="https://script.google.com/macros/s/AKfycbwqMSPtREoUDM4Nn6hGy_AcmcoHy4dB4tjeX5Fj3VZ5buL2t_YWPuNAbu0nxyKDqqVI/exec">
+                    <input type="hidden" name="action" value="submitVideoQuestion">
+                    <input type="hidden" name="video_type" id="videoType">
+                    <input type="hidden" name="video_id" id="videoId">
+                    <input type="hidden" name="title" id="videoTitleHidden">
+                    <input type="hidden" name="line_user_id" id="lineUserId">
+                    <input type="hidden" name="display_name" id="displayName">
+                    <div class="mb-3">
+                        <textarea class="form-control" id="questionInput" name="question" rows="4" placeholder="กรอกคำถามของคุณที่นี่..." required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                <button type="button" class="btn btn-primary" onclick="sendQuestion()">ส่งคำถาม</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    <!-- Toast สำหรับการแจ้งเตือน -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1055;">
+        <div id="successToast" class="toast text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">ส่งคำถามสำเร็จ!</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+      
+      
+      // เพิ่ม event listener สำหรับ iframe response
+window.addEventListener('message', function(event) {
+    if (event.data && event.data.status === 'success') {
+        // ปิด Modal
+        const modal = document.getElementById('questionModal');
+        const bsModal = bootstrap.Modal.getInstance(modal);
+        if (bsModal) {
+            bsModal.hide();
+            // รอให้ Modal ปิดเสร็จแล้วค่อยแสดง Toast
+            modal.addEventListener('hidden.bs.modal', function() {
+                const successToast = document.getElementById('successToast');
+                const toast = new bootstrap.Toast(successToast);
+                toast.show();
+                document.getElementById('questionInput').value = '';
+            }, { once: true });
+        }
+    }
+});
+      
+        document.addEventListener('DOMContentLoaded', async function () {
+            const params = new URLSearchParams(window.location.search);
+            const videoType = params.get('type');
+            const videoId = params.get('id');
+            const title = decodeURIComponent(params.get('title') || 'Video Player');
+            const courseId = params.get('courseId');
+            const videoTitle = document.getElementById('videoTitle');
+            const videoContainer = document.getElementById('videoContainer');
+          
+          // เพิ่มการกำหนดค่าให้กับ hidden fields เมื่อ Modal เปิด
+document.getElementById('questionModal').addEventListener('show.bs.modal', function (event) {
+    const params = new URLSearchParams(window.location.search);
+    document.getElementById('videoType').value = params.get('type');
+    document.getElementById('videoId').value = params.get('id');
+    document.getElementById('videoTitle').value = decodeURIComponent(params.get('title'));
+});
+
+            videoTitle.textContent = title;
+
+            // โหลดวิดีโอ
+            switch (videoType) {
+                case 'youtube':
+                    videoContainer.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1" allowfullscreen></iframe>`;
+                    break;
+                case 'vimeo':
+                    videoContainer.innerHTML = `<iframe src="https://player.vimeo.com/video/${videoId}?autoplay=1" allowfullscreen></iframe>`;
+                    break;
+                case 'loom':
+                    videoContainer.innerHTML = `<iframe src="https://www.loom.com/embed/${videoId}?autoplay=1" allowfullscreen></iframe>`;
+                    break;
+                default:
+                    videoContainer.innerHTML = `<div class="text-center">ไม่สามารถโหลดวิดีโอได้</div>`;
+            }
+
+            // Initialize LIFF
+            try {
+                await liff.init({ liffId: "2006490627-0zX7PemZ" });
+            } catch (err) {
+                console.error('LIFF Initialization failed', err);
+            }
+        });
+
+        // ฟังก์ชัน Back
+        window.handleBack = function () {
+            if (document.referrer && new URL(document.referrer).origin === window.location.origin) {
+                window.history.back();
+            } else {
+                window.location.href = '/courses.html';
+            }
+        };
+
+
+// แก้ไขฟังก์ชัน sendQuestion
+window.sendQuestion = async function () {
+    const question = document.getElementById('questionInput').value.trim();
+
+    if (!question) {
+        alert('กรุณากรอกคำถาม');
+        return;
+    }
+
+    try {
+        await liff.init({ liffId: "2006490627-0zX7PemZ" });
+        const profile = liff.isLoggedIn()
+            ? await liff.getProfile()
+            : { 
+                displayName: "Guest", 
+                pictureUrl: "https://raw.githubusercontent.com/infobwd/STUDENT-CARE/main/user.png" 
+            };
+
+        const params = new URLSearchParams(window.location.search);
+        const videoType = params.get('type');
+        const videoId = params.get('id');
+        const title = decodeURIComponent(params.get('title') || 'Video Player');
+        
+        const liffUrl = `https://liff.line.me/2006490627-0zX7PemZ/video.html?type=${videoType}&id=${videoId}&title=${encodeURIComponent(title)}`;
+        // สร้าง discussion URL โดยใช้วิธีชั่วคราว
+        const discussionUrl = `https://noppharut.glitch.me/discussion.html?type=${videoType}&id=${videoId}`;
+
+        // สร้าง Flex Message
+        const flexMessage = {
+            type: "flex",
+            altText: "คำถามใหม่จากผู้เรียน",
+            contents: {
+                type: "bubble",
+                size: "mega",
+                header: {
+                    type: "box",
+                    layout: "vertical",
+                    contents: [
+                        {
+                            type: "box",
+                            layout: "horizontal",
+                            contents: [
+                                {
+                                    type: "box",
+                                    layout: "vertical",
+                                    contents: [
+                                        {
+                                            type: "image",
+                                            url: profile.pictureUrl,
+                                            aspectMode: "cover",
+                                            size: "full"
+                                        }
+                                    ],
+                                    width: "48px",
+                                    height: "48px",
+                                    cornerRadius: "24px"
+                                },
+                                {
+                                    type: "box",
+                                    layout: "vertical",
+                                    contents: [
+                                        {
+                                            type: "text",
+                                            text: profile.displayName,
+                                            color: "#ffffff",
+                                            size: "md",
+                                            weight: "bold"
+                                        },
+                                        {
+                                            type: "text",
+                                            text: "คำถามจากวิดีโอ",
+                                            color: "#4ADE80",
+                                            size: "xs"
+                                        }
+                                    ],
+                                    margin: "md",
+                                    spacing: "xs"
+                                }
+                            ],
+                            spacing: "xl"
+                        }
+                    ],
+                    paddingAll: "20px",
+                    backgroundColor: "#18181B",
+                    spacing: "md"
+                },
+                body: {
+                    type: "box",
+                    layout: "vertical",
+                    contents: [
+                        {
+                            type: "box",
+                            layout: "vertical",
+                            contents: [
+                                {
+                                    type: "text",
+                                    text: title,
+                                    color: "#D4D4D8",
+                                    size: "sm",
+                                    weight: "bold",
+                                    wrap: true
+                                }
+                            ],
+                            backgroundColor: "#27272A",
+                            paddingAll: "15px",
+                            cornerRadius: "md",
+                            margin: "md"
+                        },
+                        {
+                            type: "box",
+                            layout: "vertical",
+                            contents: [
+                                {
+                                    type: "text",
+                                    text: "❓ " + question,
+                                    color: "#FFFFFF",
+                                    size: "md",
+                                    wrap: true
+                                }
+                            ],
+                            paddingAll: "15px",
+                            backgroundColor: "#3F3F46",
+                            cornerRadius: "md",
+                            margin: "md"
+                        }
+                    ],
+                    paddingAll: "20px",
+                    backgroundColor: "#18181B"
+                },
+                footer: {
+                    type: "box",
+                    layout: "vertical",
+                    contents: [
+                        {
+                            type: "button",
+                            action: {
+                                type: "uri",
+                                label: "ตอบคำถาม",
+                                uri: discussionUrl
+                            },
+                            style: "primary",
+                            color: "#4ADE80",
+                            margin: "md"
+                        },
+                        {
+                            type: "button",
+                            action: {
+                                type: "uri",
+                                label: "ดูวิดีโอ",
+                                uri: liffUrl
+                            },
+                            style: "secondary",
+                            color: "#52525B",
+                            margin: "sm"
+                        }
+                    ],
+                    paddingAll: "20px",
+                    backgroundColor: "#18181B",
+                    spacing: "sm"
+                }
+            }
+        };
+
+        // ส่ง Flex Message
+        const messageResult = await liff.shareTargetPicker([flexMessage]);
+        
+        if (messageResult) {
+            // Set form values
+            document.getElementById('videoType').value = videoType;
+            document.getElementById('videoId').value = videoId;
+            document.getElementById('videoTitleHidden').value = title;
+            document.getElementById('lineUserId').value = profile.userId;
+            document.getElementById('displayName').value = profile.displayName;
+
+            // Submit form
+            document.getElementById('questionForm').submit();
+            
+            // ปิด Modal ทันที
+            const modal = document.getElementById('questionModal');
+            const bsModal = bootstrap.Modal.getInstance(modal);
+            if (bsModal) {
+                bsModal.hide();
+                // แสดง Toast หลังจาก Modal ปิด
+                modal.addEventListener('hidden.bs.modal', function() {
+                    const successToast = document.getElementById('successToast');
+                    const toast = new bootstrap.Toast(successToast);
+                    toast.show();
+                    document.getElementById('questionInput').value = '';
+                }, { once: true });
+            }
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert("เกิดข้อผิดพลาด: " + error.message);
+    }
+};
+
+// เพิ่มการกำหนดค่าให้กับ hidden fields เมื่อ Modal เปิด
+document.getElementById('questionModal').addEventListener('show.bs.modal', function (event) {
+    const params = new URLSearchParams(window.location.search);
+    document.getElementById('videoType').value = params.get('type');
+    document.getElementById('videoId').value = params.get('id');
+    document.getElementById('videoTitleHidden').value = decodeURIComponent(params.get('title'));
+});
+    </script>
+    <script src="donation-buttons-complete.js" defer></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

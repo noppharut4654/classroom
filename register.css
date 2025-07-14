@@ -1,0 +1,232 @@
+/* register.css */
+:root {
+    --primary-color: #C41E3A;
+    --secondary-color: #D32F2F;
+    --text-color: #333333;
+    --light-bg: #F8F9FA;
+    --border-color: #DEE2E6;
+}
+
+body {
+    font-family: 'Google Sans', sans-serif;
+    background-color: var(--light-bg);
+    color: var(--text-color);
+    padding-top: 76px;
+}
+
+.navbar {
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.registration-container {
+    max-width: 800px;
+    margin: 2rem auto;
+}
+
+.registration-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.user-profile {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.user-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.course-summary {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.course-price {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.registration-form {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.form-section {
+    margin-bottom: 2rem;
+}
+
+.form-section:last-child {
+    margin-bottom: 0;
+}
+
+.section-title {
+    font-size: 1.2rem;
+    font-weight: 500;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.form-floating {
+    margin-bottom: 1rem;
+}
+
+.payment-methods {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.payment-method-card {
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.payment-method-card:hover {
+    border-color: var(--primary-color);
+}
+
+.payment-method-card.selected {
+    border-color: var(--primary-color);
+    background-color: var(--light-bg);
+}
+
+.payment-method-card i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: var(--primary-color);
+}
+
+.submit-button {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    padding: 0.8rem 2rem;
+    font-weight: 500;
+    width: 100%;
+    margin-top: 2rem;
+}
+
+.submit-button:hover {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid var(--light-bg);
+    border-top: 5px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Form validations */
+.form-control.is-invalid {
+    border-color: var(--secondary-color);
+    background-image: none;
+}
+
+.invalid-feedback {
+    color: var(--secondary-color);
+    font-size: 0.875rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .registration-container {
+        margin: 1rem;
+    }
+
+    .registration-form {
+        padding: 1rem;
+    }
+
+    .payment-methods {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+.alert-info {
+    border-left: 4px solid #0dcaf0;
+}
+
+.alert-info ol {
+    padding-left: 1.2rem;
+}
+
+.alert-info ul {
+    padding-left: 1.2rem;
+    margin-top: 0.3rem;
+}
+
+.alert-info li {
+    margin-bottom: 0.5rem;
+}
+
+.alert-info li:last-child {
+    margin-bottom: 0;
+}
+
+.badge.bg-info {
+    font-weight: normal;
+}
+
+
+.free-badge {
+    background-color: #28a745;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-weight: 500;
+    display: inline-block;
+}
+
+/* สไตล์สำหรับส่วนที่เกี่ยวกับการชำระเงิน */
+.payment-section {
+    transition: all 0.3s ease;
+}
+
+.payment-section.free-course {
+    opacity: 0.7;
+}
+
+.required-for-paid {
+    transition: all 0.3s ease;
+}
