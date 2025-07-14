@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>อนุมัติการลงทะเบียน</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="approval.css" rel="stylesheet">
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="favicon.png">
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <!-- iOS support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Course Approval">
+    <link rel="icon" type="image/png" href="https://icons.getbootstrap.com/assets/icons/check-circle-fill.svg">
+
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <div class="loading-text">กำลังโหลด...</div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header-section">
+            <div class="brand">
+<!--                 <img src="logo.png" alt="Logo" class="brand-logo"> -->
+                <h2>Course Platform</h2>
+            </div>
+        </div>
+
+        <!-- Profile Section -->
+        <div class="profile-section">
+            <div class="profile-wrapper">
+                <img id="profileImg" class="profile-img" src="https://raw.githubusercontent.com/infobwd/STUDENT-CARE/refs/heads/main/user-page.gif" alt="Profile Image">
+                <div class="profile-badge" id="adminBadge" style="display: none;">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+            </div>
+            <h3 id="userName">กำลังโหลดข้อมูล...</h3>
+        </div>
+
+        <!-- Details Card -->
+        <div class="card details-card">
+            <div class="card-header">
+                <i class="bi bi-info-circle"></i>
+                <h4>รายละเอียดการลงทะเบียน</h4>
+            </div>
+            <div class="card-body">
+                <div id="registrationDetails" class="details-section">
+                    <!-- Details will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Card -->
+        <div class="card payment-card">
+            <div class="card-header">
+                <i class="bi bi-credit-card"></i>
+                <h4>ข้อมูลการชำระเงิน</h4>
+            </div>
+            <div class="card-body">
+                <div id="paymentDetails" class="details-section">
+                    <!-- Payment details will be populated by JavaScript -->
+                </div>
+                <!-- Slip Image Preview -->
+                <div id="slipPreview" class="slip-preview" style="display: none;">
+                    <h5>
+                        <i class="bi bi-image"></i>
+                        สลิปการโอนเงิน
+                    </h5>
+<div id="slip-image-container" class="slip-image-container">
+                        <img id="slipImage" src="" alt="สลิปการโอนเงิน">
+                        <div class="slip-overlay">
+                            <button onclick="viewSlipFullscreen()" class="btn-icon">
+                                <i class="bi bi-zoom-in"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="button-group">
+            <button id="approveBtn" class="btn-approve" onclick="approveRegistration()">
+                <i class="bi bi-check-circle"></i>
+                <span>อนุมัติการลงทะเบียน</span>
+                <div class="button-effect"></div>
+            </button>
+            <button class="btn-share" onclick="shareFlexMessage()">
+                <i class="bi bi-line"></i>
+                <span>แชร์ไปยัง LINE</span>
+                <div class="button-effect"></div>
+            </button>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>© 2024 Course Platform. All rights reserved.</p>
+        </div>
+    </div>
+
+    <!-- Fullscreen Slip Modal -->
+    <div id="slipModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeSlipModal()">
+                <i class="bi bi-x-lg"></i>
+            </span>
+            <img id="slipModalImage" src="" alt="สลิปการโอนเงิน (เต็มจอ)">
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="approval.js"></script>
+
+    <!-- Template for registration details -->
+    <template id="registrationDetailsTemplate">
+        <div class="details-row">
+            <span class="details-label">
+                <i class="bi bi-hash"></i>
+                รหัสการลงทะเบียน
+            </span>
+            <span class="details-value">{registration_id}</span>
+        </div>
+        <div class="details-row">
+            <span class="details-label">
+                <i class="bi bi-book"></i>
+                คอร์ส
+            </span>
+            <span class="details-value">{course_name}</span>
+        </div>
+        <div class="details-row">
+            <span class="details-label">
+                <i class="bi bi-calendar-event"></i>
+                วันที่ลงทะเบียน
+            </span>
+            <span class="details-value">{registration_date}</span>
+        </div>
+        <div class="details-row">
+            <span class="details-label">
+                <i class="bi bi-tag"></i>
+                สถานะ
+            </span>
+            <span class="status-badge {status_class}">
+                <i class="bi {status_icon}"></i>
+                {status_text}
+            </span>
+        </div>
+    </template>
+
+    <!-- Template for payment details -->
+    <template id="paymentDetailsTemplate">
+        <div class="details-row">
+            <span class="details-label">
+                <i class="bi bi-wallet2"></i>
+                วิธีการชำระเงิน
+            </span>
+            <span class="details-value">{payment_method}</span>
+        </div>
+        <div class="details-row">
+            <span class="details-label">
+                <i class="bi bi-cash"></i>
+                จำนวนเงิน
+            </span>
+            <span class="details-value">{amount}</span>
+        </div>
+        <div class="details-row">
+            <span class="details-label">
+                <i class="bi bi-clock-history"></i>
+                วันที่ชำระเงิน
+            </span>
+            <span class="details-value">{payment_date}</span>
+        </div>
+    </template>
+
+    <!-- Template for toast notification -->
+    <template id="toastTemplate">
+        <div class="toast {type}">
+            <i class="toast-icon bi {icon}"></i>
+            <span class="toast-message">{message}</span>
+            <button class="toast-close" onclick="this.parentElement.remove()">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+    </template>
+</body>
+</html>
